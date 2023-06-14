@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import os
 from util import calculate_alpha, calculate_cost, get_borders, get_nearest_distance, color_guided_filter
 
 
@@ -52,6 +53,7 @@ class GlobalMatting:
                 self.propagation(i, j)
                 self.random_search(i, j)
 
+        print("Post processing...")
         post_process = color_guided_filter(self.image, self.alpha, 10, 1e-6)
         return post_process
 
@@ -101,8 +103,8 @@ class GlobalMatting:
 if __name__ == "__main__":
     root = "./test-images/"
 
-    image = cv2.imread(root + "input.png")
-    trimap = cv2.imread(root + "trimap.png", cv2.IMREAD_GRAYSCALE)
+    image = cv2.imread(os.path.join(root, "input.png"))
+    trimap = cv2.imread(os.path.join(root, "trimap.png"), cv2.IMREAD_GRAYSCALE)
 
     matting = GlobalMatting(image, trimap)
     alpha_map = matting.run()
@@ -110,6 +112,6 @@ if __name__ == "__main__":
     cv2.imshow("input", image)
     cv2.imshow("trimap", trimap)
     cv2.imshow("alpha map", alpha_map)
-    cv2.imwrite(root + "result.png", np.clip(alpha_map*255, 0, 255).astype(np.uint8))
+    # cv2.imwrite("result.png", np.clip(alpha_map*255, 0, 255).astype(np.uint8))
     cv2.waitKey()
     cv2.destroyAllWindows()
