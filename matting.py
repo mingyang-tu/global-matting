@@ -101,7 +101,7 @@ class GlobalMatting:
 
 
 if __name__ == "__main__":
-    root = "./test-images/"
+    root = "test-images"
 
     image = cv2.imread(os.path.join(root, "input.png"))
     trimap = cv2.imread(os.path.join(root, "trimap.png"), cv2.IMREAD_GRAYSCALE)
