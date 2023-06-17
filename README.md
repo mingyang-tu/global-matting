@@ -6,6 +6,7 @@ Python implementation of He, Kaiming, et al. "A global sampling method for alpha
 
 - numpy
 - opencv-python
+- scipy
 
 ## Usage
 

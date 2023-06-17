@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import math
+from scipy.spatial import KDTree
 
 
 def calculate_alpha(pixel, foreground, background):
@@ -66,24 +67,11 @@ def get_nearest_distance(foreground, background, unknown):
 
 
 def _get_nearest_distance(unknown, ground):
-    output = np.zeros(unknown.shape, dtype=np.float64)
-
-    unseen = unknown.copy()
-    distance = 1
-
-    dilated = ground.astype(np.uint8)
-    kernels = [
-        np.ones((3, 3), dtype=np.uint8),
-        np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=np.uint8)
-    ]
-    while np.any(unseen):
-        dilated = cv2.dilate(dilated, kernels[distance % 2], iterations=1)
-        current = dilated.astype(bool) & unseen
-        unseen[current] = False
-        output[current] = float(distance)
-        distance += 1
-    output[unknown == False] = 0
-    return output
+    unknown_points = np.array(unknown, dtype=np.float64)
+    contour_points = np.array(ground, dtype=np.float64)
+    kdtree = KDTree(contour_points)
+    distances, _ = kdtree.query(unknown_points)
+    return distances
 
 
 def color_guided_filter(guided, target, radius, epsilon):

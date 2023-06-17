@@ -23,7 +23,7 @@ class GlobalMatting:
         self.u_position = [(i, j) for (i, j) in zip(row_idx[self.u_bin], col_idx[self.u_bin])]
 
         self.f_position, self.b_position = get_borders(self.image, f_bin, b_bin, self.u_bin)
-        self.f_nearest, self.b_nearest = get_nearest_distance(f_bin, b_bin, self.u_bin)
+        self.f_nearest, self.b_nearest = get_nearest_distance(self.f_position, self.b_position, self.u_position)
 
         self.f_len = len(self.f_position)
         self.b_len = len(self.b_position)
@@ -49,15 +49,15 @@ class GlobalMatting:
             indexs = np.arange(self.u_len)
             np.random.shuffle(indexs)
             for idx in indexs:
-                (i, j) = self.u_position[idx]
-                self.propagation(i, j)
-                self.random_search(i, j)
+                self.propagation(idx)
+                self.random_search(idx)
 
         print("Post processing...")
         post_process = color_guided_filter(self.image, self.alpha, 10, 1e-6)
         return post_process
 
-    def propagation(self, i, j):
+    def propagation(self, idx):
+        (i, j) = self.u_position[idx]
         neighbors = [[0, 0], [0, 1], [0, -1], [1, 0], [-1, 0]]
         for (di, dj) in neighbors:
             new_i, new_j = i + di, j + dj
@@ -68,7 +68,7 @@ class GlobalMatting:
                 cost = calculate_cost(
                     self.image[i, j, :], self.image[fi, fj, :], self.image[bi, bj, :],
                     (i, j), (fi, fj), (bi, bj),
-                    self.f_nearest[i, j], self.b_nearest[i, j]
+                    self.f_nearest[idx], self.b_nearest[idx]
                 )
                 if cost < self.min_cost[i, j]:
                     self.min_cost[i, j] = cost
@@ -78,7 +78,8 @@ class GlobalMatting:
                         self.image[i, j, :], self.image[fi, fj, :], self.image[bi, bj, :]
                     )
 
-    def random_search(self, i, j):
+    def random_search(self, idx):
+        (i, j) = self.u_position[idx]
         for w in self.windows:
             f = self.f_index[i, j] + round(w * (np.random.random() * 2 - 1))
             f = min(max(0, f), self.f_len - 1)
@@ -89,7 +90,7 @@ class GlobalMatting:
             cost = calculate_cost(
                 self.image[i, j, :], self.image[fi, fj, :], self.image[bi, bj, :],
                 (i, j), (fi, fj), (bi, bj),
-                self.f_nearest[i, j], self.b_nearest[i, j]
+                self.f_nearest[idx], self.b_nearest[idx]
             )
             if cost < self.min_cost[i, j]:
                 self.min_cost[i, j] = cost
